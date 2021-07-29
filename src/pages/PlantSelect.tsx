@@ -4,7 +4,8 @@ import {
     Text,
     StyleSheet,
     View,
-    FlatList
+    FlatList,
+    ActivityIndicator
 } from "react-native";
 
 import api from '../services/api';
@@ -60,15 +61,6 @@ export function PlantSelect() {
         setFilteredPlants(filtered)
     }
 
-    function handleFetchMore(distance: number){
-        if(distance > 1)
-            return
-        
-        setLoadingMore(true)
-        setPage(oldValue => oldValue + 1)
-        fetchPlants()
-    }
-
     async function fetchPlants() {
         const { data } = await api.get(`plants?_sort=name&_order=asc&_page=${page}&_limit=8`)
         
@@ -77,8 +69,8 @@ export function PlantSelect() {
         }
 
         if(page>1){
-            setPlants(oldValue => [...oldValue, data])
-            setFilteredPlants(oldValue => [...oldValue, data])
+            setPlants(oldValue => [...oldValue, ...data])
+            setFilteredPlants(oldValue => [...oldValue, ...data])
         }else {
             setPlants(data)
             setFilteredPlants(data)
@@ -86,6 +78,15 @@ export function PlantSelect() {
 
         setLoading(false)
         setLoadingMore(false)
+    }
+
+    function handleFetchMore(distance: number){
+        if(distance > 1)
+            return;
+        
+        setLoadingMore(true)
+        setPage(oldValue => oldValue + 1)
+        fetchPlants()
     }
 
     useEffect(() => {
@@ -110,7 +111,7 @@ export function PlantSelect() {
     if(loading)
         return <Load />
     return(
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             <View style={styles.header}>
                 <Header />
                 <Text style={styles.title}>
@@ -150,11 +151,17 @@ export function PlantSelect() {
                     contentContainerStyle={styles.contentContainerStyle}
                     onEndReachedThreshold={0.1}
                     onEndReached={({ distanceFromEnd } ) => handleFetchMore(distanceFromEnd)}
+                    ListFooterComponent={
+                        loadingMore?
+                            <ActivityIndicator color={colors.green}/>
+                            :
+                            <></>
+                    }
                 />
 
             </View>
             
-        </SafeAreaView>
+        </View>
     )
 }
 
